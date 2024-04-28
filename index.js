@@ -34,7 +34,6 @@ async function run() {
             const destination = searchValue.destination;
             const date = searchValue.date;
             const bustype = searchValue.bustype;
-            console.log(searchValue);
             const query = {
                 $and: [
                     { destination: destination }, { date: date }, {bustype:bustype}
@@ -44,8 +43,36 @@ async function run() {
             res.send(result);
         })
 
+
+        
+        app.get('/selectedBus/:id', async (req, res) => {
+            const id = req.params.id;
+            console.log(id);
+            const query = { _id:new ObjectId(id) };
+            const result = await BusCollection.findOne(query);
+            res.send(result);
+        });
         // *********************************save buses****************************
         app.post('/addBus', async (req, res) => {
+            const businfo = req.body;
+            const time = req.body.time;
+            const date = req.body.date;
+            const destination = req.body.destination;
+            const query = {
+                $and: [
+                    { time: time }, { destination: destination }, { date: date }
+                ]
+            }
+            const result = await BusCollection.findOne(query);
+            if (result) {
+                res.send(false)
+            } else {
+                const result2 = await BusCollection.insertOne(businfo);
+                res.send(result2);
+            }
+        })
+
+        app.post('/addbooking', async (req, res) => {
             const businfo = req.body;
             const time = req.body.time;
             const date = req.body.date;
