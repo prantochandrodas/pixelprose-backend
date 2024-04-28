@@ -21,7 +21,7 @@ async function run() {
     try {
 
         const BusCollection = client.db('busdb').collection('busesCollection');
-
+        const BookingCollection=client.db('busdb').collection('bookingCollection');
         app.get('/allBus', async (req, res) => {
             const query = {}
             const result = await BusCollection.find(query).toArray();
@@ -36,19 +36,19 @@ async function run() {
             const bustype = searchValue.bustype;
             const query = {
                 $and: [
-                    { destination: destination }, { date: date }, {bustype:bustype}
+                    { destination: destination }, { date: date }, { bustype: bustype }
                 ]
             }
-            const result=await BusCollection.find(query).toArray();
+            const result = await BusCollection.find(query).toArray();
             res.send(result);
         })
 
 
-        
+
         app.get('/selectedBus/:id', async (req, res) => {
             const id = req.params.id;
             console.log(id);
-            const query = { _id:new ObjectId(id) };
+            const query = { _id: new ObjectId(id) };
             const result = await BusCollection.findOne(query);
             res.send(result);
         });
@@ -73,22 +73,10 @@ async function run() {
         })
 
         app.post('/addbooking', async (req, res) => {
-            const businfo = req.body;
-            const time = req.body.time;
-            const date = req.body.date;
-            const destination = req.body.destination;
-            const query = {
-                $and: [
-                    { time: time }, { destination: destination }, { date: date }
-                ]
-            }
-            const result = await BusCollection.findOne(query);
-            if (result) {
-                res.send(false)
-            } else {
-                const result2 = await BusCollection.insertOne(businfo);
-                res.send(result2);
-            }
+            const bookinginfo = req.body;
+            const query = {}
+            const result2 = await BusCollection.insertOne(businfo);
+            res.send(result2);
         })
 
     } finally {
