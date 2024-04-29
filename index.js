@@ -25,6 +25,21 @@ async function run() {
         app.get('/allBus', async (req, res) => {
             const query = {}
             const result = await BusCollection.find(query).toArray();
+            const query2={}
+            res.send(result);
+        })
+
+        app.get('/allBooking', async (req, res) => {
+            const query = {}
+            const result = await BookingCollection.find(query).toArray();
+            res.send(result);
+        })
+        app.get('/findBooing', async (req, res) => {
+            const id=req.query.bookedId;
+            const query = { _id: new ObjectId(id) };
+            const result = await BookingCollection.find(query).toArray();
+            const query2={};
+            const buses=await BusCollection.find(query2).toArray();
             res.send(result);
         })
 
@@ -74,8 +89,8 @@ async function run() {
 
         app.post('/addbooking', async (req, res) => {
             const bookinginfo = req.body;
-            const query = {}
-            const result2 = await BusCollection.insertOne(businfo);
+            console.log(bookinginfo);
+            const result2 = await BookingCollection.insertOne(bookinginfo);
             res.send(result2);
         })
 
