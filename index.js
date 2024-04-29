@@ -22,12 +22,6 @@ async function run() {
 
         const BusCollection = client.db('busdb').collection('busesCollection');
         const BookingCollection = client.db('busdb').collection('bookingCollection');
-        app.get('/allBus', async (req, res) => {
-            const query = {}
-            const result = await BusCollection.find(query).toArray();
-            const query2 = {}
-            res.send(result);
-        })
 
         app.get('/allBooking', async (req, res) => {
             const query = {}
@@ -63,36 +57,27 @@ async function run() {
         //     res.send(result);
         // });
 
+        app.get('/allBus', async (req, res) => {
+            const query = {}
+            const buses = await BusCollection.find(query).toArray();
+            const alreadyBooked = await BookingCollection.find(query).toArray()
+            buses.forEach(bus => {
+                const seatBooked = alreadyBooked.filter(book => book.bookingId == bus._id);
+                const bookedSeat = seatBooked.map(seats => seats.selectedSeats)
+                const allBookedSites = bookedSeat.flat();
+                const allbookSeat=bus.seat.filter(seat=>allBookedSites.includes(seat))
+                bus.bookedSeat=allbookSeat;
+            })
+            res.send(buses);
+        })
 
-
-          // app.get('/add',async(req,res)=>{
-        //     const filter={};
-        //     const option = { upsert: true }
-        //     const updatedDoc = {
-        //         $set: {
-        //             advertise: false
-        //         }
-        //     }
-        //     const result = await allProductsCollection.updateMany(filter, updatedDoc, option);
-        //     res.send(result);
-        // }); 
 
 
         app.get('/selectedBus/:id', async (req, res) => {
             const id = req.params.id;
             const query = { bookingId: id };
             const selectedBus=await BusCollection.findOne({ _id: new ObjectId(id)});
-            const alreadyBooked = await BookingCollection.find(query).toArray()
-            const query2 = {};
-            const buses = await BusCollection.find(query2).toArray();
-            buses.forEach(bus => {
-                const seatBooked = alreadyBooked.filter(book => book.bookingId == bus._id);
-                const bookedSeat = seatBooked.map(seats => seats.selectedSeats)
-                const allBookedSites = bookedSeat.flat();
-                const allbookSeat=bus.seat.filter(seat=>allBookedSites.includes(seat))
-                // console.log(allbookSeat)
-            })
-            console.log(allbookSeat)
+          
             res.send(selectedBus);
         });
 
