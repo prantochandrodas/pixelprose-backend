@@ -21,11 +21,11 @@ async function run() {
     try {
 
         const BusCollection = client.db('busdb').collection('busesCollection');
-        const BookingCollection=client.db('busdb').collection('bookingCollection');
+        const BookingCollection = client.db('busdb').collection('bookingCollection');
         app.get('/allBus', async (req, res) => {
             const query = {}
             const result = await BusCollection.find(query).toArray();
-            const query2={}
+            const query2 = {}
             res.send(result);
         })
 
@@ -35,12 +35,7 @@ async function run() {
             res.send(result);
         })
         app.get('/findBooing', async (req, res) => {
-            const id=req.query.bookedId;
-            const query = { _id: new ObjectId(id) };
-            const result = await BookingCollection.find(query).toArray();
-            const query2={};
-            const buses=await BusCollection.find(query2).toArray();
-            res.send(result);
+
         })
 
         app.get('/searchBus', async (req, res) => {
@@ -60,13 +55,51 @@ async function run() {
 
 
 
+        // app.get('/selectedBus/:id', async (req, res) => {
+        //     const id = req.params.id;
+
+        //     const query = { _id: new ObjectId(id) };
+        //     const result = await BusCollection.findOne(query);
+        //     res.send(result);
+        // });
+
+
+
+          // app.get('/add',async(req,res)=>{
+        //     const filter={};
+        //     const option = { upsert: true }
+        //     const updatedDoc = {
+        //         $set: {
+        //             advertise: false
+        //         }
+        //     }
+        //     const result = await allProductsCollection.updateMany(filter, updatedDoc, option);
+        //     res.send(result);
+        // }); 
+
+
         app.get('/selectedBus/:id', async (req, res) => {
             const id = req.params.id;
-            console.log(id);
-            const query = { _id: new ObjectId(id) };
-            const result = await BusCollection.findOne(query);
-            res.send(result);
+            const query = { bookingId: id };
+            const selectedBus=await BusCollection.findOne({ _id: new ObjectId(id)});
+            const alreadyBooked = await BookingCollection.find(query).toArray()
+            const query2 = {};
+            const buses = await BusCollection.find(query2).toArray();
+            buses.forEach(bus => {
+                const seatBooked = alreadyBooked.filter(book => book.bookingId == bus._id);
+                const bookedSeat = seatBooked.map(seats => seats.selectedSeats)
+                const allBookedSites = bookedSeat.flat();
+                const allbookSeat=bus.seat.filter(seat=>allBookedSites.includes(seat))
+                // console.log(allbookSeat)
+            })
+            console.log(allbookSeat)
+            res.send(selectedBus);
         });
+
+
+
+
+
         // *********************************save buses****************************
         app.post('/addBus', async (req, res) => {
             const businfo = req.body;
