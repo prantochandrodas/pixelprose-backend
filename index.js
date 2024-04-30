@@ -66,7 +66,7 @@ async function run() {
                 const bookedSeat = seatBooked.map(seats => seats.selectedSeats)
                 const allBookedSites = bookedSeat.flat();
                 const allbookSeat=bus.seat.filter(seat=>allBookedSites.includes(seat))
-                bus.bookedSeat=allbookSeat;
+                bus.bookedSeats=allbookSeat;
             })
             res.send(buses);
         })
@@ -75,10 +75,14 @@ async function run() {
 
         app.get('/selectedBus/:id', async (req, res) => {
             const id = req.params.id;
-            const query = { bookingId: id };
-            const selectedBus=await BusCollection.findOne({ _id: new ObjectId(id)});
-          
-            res.send(selectedBus);
+            const query = {bookingId: id };
+            const findBookings=await BookingCollection.find(query).toArray();
+            const getAllBookedSeats= findBookings.map(bookings=>bookings.selectedSeats)
+            const allBookedSites = getAllBookedSeats.flat();
+            const query2={_id: new ObjectId(id)}
+             const selectedBus=await BusCollection.findOne(query2);
+            selectedBus.bookedSeats=allBookedSites;
+             res.send(selectedBus);
         });
 
 
@@ -107,7 +111,6 @@ async function run() {
 
         app.post('/addbooking', async (req, res) => {
             const bookinginfo = req.body;
-            console.log(bookinginfo);
             const result2 = await BookingCollection.insertOne(bookinginfo);
             res.send(result2);
         })
