@@ -49,13 +49,13 @@ async function run() {
 
 
 
-        // app.get('/selectedBus/:id', async (req, res) => {
-        //     const id = req.params.id;
+        app.get('/myBookings', async (req, res) => {
+            const email = req.query.email;
 
-        //     const query = { _id: new ObjectId(id) };
-        //     const result = await BusCollection.findOne(query);
-        //     res.send(result);
-        // });
+            const query = { email:email };
+            const result = await BookingCollection.find(query).toArray();
+            res.send(result);
+        });
 
         app.get('/allBus', async (req, res) => {
             const query = {}
