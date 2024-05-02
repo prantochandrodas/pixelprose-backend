@@ -86,6 +86,20 @@ async function run() {
         });
 
 
+        app.delete('/deleteSelectedSeat/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = {  _id: new ObjectId(id) };
+            const result = await BookingCollection.deleteOne(query);
+            res.send(result);
+        });
+        app.delete('/deleteAllSelectedSeat/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = {  email:email };
+            const result = await BookingCollection.deleteMany(query);
+            res.send(result);
+        });
+
+
 
 
 
