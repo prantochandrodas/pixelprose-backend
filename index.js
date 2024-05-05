@@ -51,22 +51,29 @@ async function run() {
 
         app.get('/myBookings', async (req, res) => {
             const email = req.query.email;
-
-            const query = { email:email };
+            const query = { email: email };
             const result = await BookingCollection.find(query).toArray();
             res.send(result);
         });
 
+
+        
+        app.get('/getBookingForPayment/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await BookingCollection.findOne(query);
+            res.send(result);
+        });
         app.get('/allBus', async (req, res) => {
             const query = {}
-            const buses = await BusCollection.find(query).toArray();
+            const buses = await BusCollection.find(query).sort({date:-1}).toArray();
             const alreadyBooked = await BookingCollection.find(query).toArray()
             buses.forEach(bus => {
                 const seatBooked = alreadyBooked.filter(book => book.bookingId == bus._id);
-                const bookedSeat = seatBooked.map(seats => seats.selectedSeats)
+                const bookedSeat = seatBooked.map(seats => seats.bookedSeats)
                 const allBookedSites = bookedSeat.flat();
-                const allbookSeat=bus.seat.filter(seat=>allBookedSites.includes(seat))
-                bus.bookedSeats=allbookSeat;
+                const allbookSeat = bus.seat.filter(seat => allBookedSites.includes(seat))
+                bus.bookedSeats = allbookSeat;
             })
             res.send(buses);
         })
@@ -75,26 +82,35 @@ async function run() {
 
         app.get('/selectedBus/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {bookingId: id };
-            const findBookings=await BookingCollection.find(query).toArray();
-            const getAllBookedSeats= findBookings.map(bookings=>bookings.selectedSeats)
+            const query = { bookingId: id };
+            const findBookings = await BookingCollection.find(query).toArray();
+            const getAllBookedSeats = findBookings.map(bookings => bookings.bookedSeats)
             const allBookedSites = getAllBookedSeats.flat();
-            const query2={_id: new ObjectId(id)}
-             const selectedBus=await BusCollection.findOne(query2);
-            selectedBus.bookedSeats=allBookedSites;
-             res.send(selectedBus);
+            const query2 = { _id: new ObjectId(id) }
+            const selectedBus = await BusCollection.findOne(query2);
+            selectedBus.bookedSeats = allBookedSites;
+            res.send(selectedBus);
         });
+        app.get('/myBookedBus/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) }
+            const result = await BookingCollection.findOne(query);
+            res.send(result);
+        });
+
+
+
 
 
         app.delete('/deleteSelectedSeat/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {  _id: new ObjectId(id) };
+            const query = { _id: new ObjectId(id) };
             const result = await BookingCollection.deleteOne(query);
             res.send(result);
         });
         app.delete('/deleteAllSelectedSeat/:email', async (req, res) => {
             const email = req.params.email;
-            const query = {  email:email };
+            const query = { email: email };
             const result = await BookingCollection.deleteMany(query);
             res.send(result);
         });
