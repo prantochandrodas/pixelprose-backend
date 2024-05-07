@@ -66,10 +66,10 @@ async function run() {
             res.send(result);
         });
         app.get('/allBus', async (req, res) => {
-            const page=req.query.page;
-            const size=parseInt(req.query.size);
+            const page = req.query.page;
+            const size = parseInt(req.query.size);
             const query = {}
-            const buses = await BusCollection.find(query).sort({ date: -1, time: -1 }).skip(page*size).limit(size).toArray();
+            const buses = await BusCollection.find(query).sort({ date: -1, time: -1 }).skip(page * size).limit(size).toArray();
             const count = await BusCollection.estimatedDocumentCount();
             const alreadyBooked = await BookingCollection.find(query).toArray()
             buses.forEach(bus => {
@@ -144,13 +144,49 @@ async function run() {
         })
 
 
+
+        app.get('/allBus', async (req, res) => {
+            const page = req.query.page;
+            const size = parseInt(req.query.size);
+            const query = {}
+            const buses = await BusCollection.find(query).sort({ date: -1, time: -1 }).skip(page * size).limit(size).toArray();
+            const count = await BusCollection.estimatedDocumentCount();
+            const alreadyBooked = await BookingCollection.find(query).toArray()
+            buses.forEach(bus => {
+                const seatBooked = alreadyBooked.filter(book => book.bookingId == bus._id);
+                const bookedSeat = seatBooked.map(seats => seats.bookedSeats)
+                const allBookedSites = bookedSeat.flat();
+                const allbookSeat = bus.seat.filter(seat => allBookedSites.includes(seat))
+                bus.bookedSeats = allbookSeat;
+            })
+            res.send({ count, buses });
+        })
         app.post('/addMultiBus', async (req, res) => {
             const businfo = req.body;
-            const result2 = await BusCollection.insertMany(businfo);
-            res.send(result2);
+            const allBuses = await BusCollection.find({}).toArray();
+           
+            function findDifferentNames(arr1, arr2) {
+                const differentObjects = [];
+
+                arr1.forEach(obj1 => {
+                    const foundObj = arr2.find(obj2 => obj1.destination === obj2.destination && obj1.date== obj2.date && obj1.time==obj2.time);
+                    if (!foundObj) {
+                        differentObjects.push(obj1);
+                    }
+                });
+                return differentObjects;
+            }
+
+            const differentObjects = findDifferentNames(businfo, allBuses);
+            if(differentObjects.length==0){
+                res.send(false)
+            }else{
+                const result=await BusCollection.insertMany(differentObjects);
+                res.send(result);
+            }
         })
 
-       
+
 
 
         app.post('/addbooking', async (req, res) => {
