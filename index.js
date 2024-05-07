@@ -22,6 +22,7 @@ async function run() {
 
         const BusCollection = client.db('busdb').collection('busesCollection');
         const BookingCollection = client.db('busdb').collection('bookingCollection');
+        const demoBusCollection = client.db('busdb').collection('demoBusCollection');
 
         app.get('/allBooking', async (req, res) => {
             const query = {}
@@ -57,7 +58,7 @@ async function run() {
         });
 
 
-        
+
         app.get('/getBookingForPayment/:id', async (req, res) => {
             const id = req.params.id;
             const query = { _id: new ObjectId(id) };
@@ -66,7 +67,7 @@ async function run() {
         });
         app.get('/allBus', async (req, res) => {
             const query = {}
-            const buses = await BusCollection.find(query).sort({date:-1}).toArray();
+            const buses = await BusCollection.find(query).sort({ date: -1, time: -1 }).toArray();
             const alreadyBooked = await BookingCollection.find(query).toArray()
             buses.forEach(bus => {
                 const seatBooked = alreadyBooked.filter(book => book.bookingId == bus._id);
@@ -83,7 +84,7 @@ async function run() {
         app.get('/selectedBus/:id', async (req, res) => {
             const id = req.params.id;
             const query = { bookingId: id };
-            const findBookings = await BookingCollection.find(query).toArray();
+            const findBookings = await BookingCollection.find(query).sort({ date: -1, time: -1 }).toArray();
             const getAllBookedSeats = findBookings.map(bookings => bookings.bookedSeats)
             const allBookedSites = getAllBookedSeats.flat();
             const query2 = { _id: new ObjectId(id) }
@@ -138,6 +139,16 @@ async function run() {
                 res.send(result2);
             }
         })
+
+
+        app.post('/addMultiBus', async (req, res) => {
+            const businfo = req.body;
+            const result2 = await BusCollection.insertMany(businfo);
+            res.send(result2);
+        })
+
+       
+
 
         app.post('/addbooking', async (req, res) => {
             const bookinginfo = req.body;
