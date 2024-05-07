@@ -66,8 +66,11 @@ async function run() {
             res.send(result);
         });
         app.get('/allBus', async (req, res) => {
+            const page=req.query.page;
+            const size=parseInt(req.query.size);
             const query = {}
-            const buses = await BusCollection.find(query).sort({ date: -1, time: -1 }).toArray();
+            const buses = await BusCollection.find(query).sort({ date: -1, time: -1 }).skip(page*size).limit(size).toArray();
+            const count = await BusCollection.estimatedDocumentCount();
             const alreadyBooked = await BookingCollection.find(query).toArray()
             buses.forEach(bus => {
                 const seatBooked = alreadyBooked.filter(book => book.bookingId == bus._id);
@@ -76,7 +79,7 @@ async function run() {
                 const allbookSeat = bus.seat.filter(seat => allBookedSites.includes(seat))
                 bus.bookedSeats = allbookSeat;
             })
-            res.send(buses);
+            res.send({ count, buses });
         })
 
 
