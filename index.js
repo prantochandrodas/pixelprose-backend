@@ -149,7 +149,7 @@ async function run() {
             const page = req.query.page;
             const size = parseInt(req.query.size);
             const query = {}
-            const buses = await BusCollection.find(query).sort({ date: -1, time: -1 }).skip(page * size).limit(size).toArray();
+            const buses = await BusCollection.find(query).sort({ "date": -1, "time": -1 }).collation({ locale: "en_US", numericOrdering: true }).skip(page * size).limit(size).toArray();
             const count = await BusCollection.estimatedDocumentCount();
             const alreadyBooked = await BookingCollection.find(query).toArray()
             buses.forEach(bus => {
@@ -164,12 +164,12 @@ async function run() {
         app.post('/addMultiBus', async (req, res) => {
             const businfo = req.body;
             const allBuses = await BusCollection.find({}).toArray();
-           
+
             function findDifferentNames(arr1, arr2) {
                 const differentObjects = [];
 
                 arr1.forEach(obj1 => {
-                    const foundObj = arr2.find(obj2 => obj1.destination === obj2.destination && obj1.date== obj2.date && obj1.time==obj2.time);
+                    const foundObj = arr2.find(obj2 => obj1.destination === obj2.destination && obj1.date == obj2.date && obj1.time == obj2.time);
                     if (!foundObj) {
                         differentObjects.push(obj1);
                     }
@@ -178,10 +178,10 @@ async function run() {
             }
 
             const differentObjects = findDifferentNames(businfo, allBuses);
-            if(differentObjects.length==0){
+            if (differentObjects.length == 0) {
                 res.send(false)
-            }else{
-                const result=await BusCollection.insertMany(differentObjects);
+            } else {
+                const result = await BusCollection.insertMany(differentObjects);
                 res.send(result);
             }
         })
@@ -191,8 +191,24 @@ async function run() {
 
         app.post('/addbooking', async (req, res) => {
             const bookinginfo = req.body;
-            const result2 = await BookingCollection.insertOne(bookinginfo);
-            res.send(result2);
+            const query2 = { bookingId: bookinginfo.bookingId, email: bookinginfo.email }
+            const find = await BookingCollection.findOne(query2)
+            if (find == null) {
+                const result2 = await BookingCollection.insertOne(bookinginfo);
+                res.send(result2);
+            } else {
+                const seatArray = [...find.bookedSeats, ...bookinginfo.bookedSeats]
+                bookinginfo.bookedSeats = seatArray;
+                const option = { upsert: true }
+                const updatedDoc = {
+                    $set: {
+                        bookedSeats:seatArray
+                    }
+                }
+                const result2 = await BookingCollection.updateOne(query2,updatedDoc,option)
+                res.send(result2)
+            }
+
         })
 
     } finally {
